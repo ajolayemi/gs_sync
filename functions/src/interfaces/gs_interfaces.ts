@@ -25,12 +25,12 @@ interface SheetInfo {
   /**
    * A number specifying the first row to read
    */
-  firstRow: number;
+  firstRow?: number;
 
   /**
    * A number specifying the last row to read
    */
-  lastRow: number;
+  lastRow?: number;
 }
 
 interface SheetSize {

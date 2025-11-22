@@ -283,6 +283,8 @@ const getSheetSize = async (
     );
     const grid = sheet?.properties?.gridProperties;
 
+    logger.info(`Check destination has data; ${sheet?.data}`)
+
     return {
       rowCount: grid?.rowCount ?? 0,
       columnCount: grid?.columnCount ?? 0,
@@ -324,7 +326,9 @@ class SheetInfoImpl {
    * This info is mainly used when reading data from Google Worksheet
    */
   static getReadA1NotationRange(sheetInfo: SheetInfo): string {
-    return `${sheetInfo.name}!${sheetInfo.firstColumn}${sheetInfo.firstRow}:${sheetInfo.lastColumn}${sheetInfo.lastRow}`;
+    const firstRow = sheetInfo.firstRow ?? "";
+    const lastRow = sheetInfo.lastRow ?? "";
+    return `${sheetInfo.name}!${sheetInfo.firstColumn}${firstRow}:${sheetInfo.lastColumn}${lastRow}`;
   }
 }
 
