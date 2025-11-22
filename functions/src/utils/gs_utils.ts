@@ -283,7 +283,7 @@ const getSheetSize = async (
     );
     const grid = sheet?.properties?.gridProperties;
 
-    logger.info(`Check destination has data; ${sheet?.data}`)
+    logger.info(`Check destination has data; ${sheet?.data}`);
 
     return {
       rowCount: grid?.rowCount ?? 0,

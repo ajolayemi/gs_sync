@@ -33,7 +33,8 @@ module.exports = {
       {
         code: 110,
         comments: 120,
-        ignorePattern: "^\\s*import|^\\s*export|^\\s*return|^\\s*logger",
+        ignorePattern: "^\\s*(import|export|return|logger\\.)",
+        ignoreTemplateLiterals: true,
       },
     ],
     "@typescript-eslint/no-explicit-any": "off",

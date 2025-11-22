@@ -19,6 +19,7 @@ const applyBatchUpdates = async (
     logger.info(logTag, "No batch update requests to apply. Exiting function.");
     return;
   }
+  // eslint-disable-next-line max-len
   logger.info(
     logTag,
     `Applying batch updates with requests to destination sheet with name : ${body.destinationWorksheetName} from spreadsheet: ${body.destinationSpreadsheetName}`
@@ -31,6 +32,7 @@ const applyBatchUpdates = async (
       requests: requests,
     },
   });
+  // eslint-disable-next-line max-len
   logger.info(
     logTag,
     `Batch update response sent to destination sheet with name : ${body.destinationWorksheetName} from spreadsheet: ${body.destinationSpreadsheetName}`
@@ -61,6 +63,7 @@ const buildBatchUpdates = async (
   const batchUpdates: SheetsV4.Schema$Request[] = [];
 
   if (!hasEnoughRows) {
+    // eslint-disable-next-line max-len
     logger.info(
       logTag,
       `Destination sheet has insufficient rows. Current: ${sheetSize.rowCount}, Required: ${rowCount}, add batch update to resize.`
@@ -79,6 +82,7 @@ const buildBatchUpdates = async (
   }
 
   if (!hasEnoughCols) {
+    // eslint-disable-next-line max-len
     logger.info(
       logTag,
       `Destination sheet has insufficient columns. Current: ${sheetSize.columnCount}, Required: ${colCount}, add batch update to resize.`

@@ -129,7 +129,7 @@ exports.gsSyncFunction = https.onRequest(async (req, res) => {
         "Destination sheet is empty; applying batch updates for eventual resize."
       );
       await applyBatchUpdates(batchUpdates, body);
-
+      // eslint-disable-next-line max-len
       logger.info(
         logTag,
         `Updating data at range: ${destinationReadRange} with ${dataFromOrigin.length} rows in destination spreadsheet ${body.destinationSpreadsheetName}.`
@@ -139,10 +139,9 @@ exports.gsSyncFunction = https.onRequest(async (req, res) => {
         dataFromOrigin,
         body.destinationSpreadsheetId
       );
-    }
-    // Otherwise, when data differs, use row-wise hash to check which rows need updating
-    // and only update those rows
-    else {
+    } else {
+      // Otherwise, when data differs, use row-wise hash to check which rows need updating
+      // and only update those rows
       logger.info(
         logTag,
         "Destination sheet has existing data; determining row-wise updates."
