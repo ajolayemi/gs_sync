@@ -70,7 +70,7 @@ exports.gsSyncFunction = https.onRequest(async (req, res) => {
     );
     logger.info(
       logTag,
-      `Data from origin sheet has length: ${dataFromOrigin.length}`
+      `Data from origin worksheet ${body.originWorksheetName} from spreadsheet ${body.originSpreadsheetName} has length: ${dataFromOrigin.length}`
     );
     const hashedDataFromOrigin = await generateHash(dataFromOrigin);
     logger.info(logTag, `Hashed data from origin: ${hashedDataFromOrigin}`);
@@ -82,32 +82,37 @@ exports.gsSyncFunction = https.onRequest(async (req, res) => {
     );
     logger.info(
       logTag,
-      `Data from destination sheet has length: ${dataFromDestination.length}`
+      `Data from destination worksheet ${body.destinationWorksheetName} from spreadsheet ${body.destinationSpreadsheetName} has length: ${dataFromDestination.length}`
     );
     const hashedDataFromDestination = await generateHash(dataFromDestination);
     logger.info(
       logTag,
-      `Hashed data from destination: ${hashedDataFromDestination}`
+      `Hashed data from destination worksheet ${body.destinationWorksheetName} from spreadsheet ${body.destinationSpreadsheetName}: ${hashedDataFromDestination}`
     );
 
     // 3. Compare hashes to determine if update is needed
     if (hashedDataFromOrigin === hashedDataFromDestination) {
       logger.info(
         logTag,
-        "Data in destination sheet is up-to-date. No update needed."
+        `Data in destination worksheet ${body.destinationWorksheetName} from spreadsheet ${body.destinationSpreadsheetName} is up-to-date. No update needed.`
       );
-      res.send("No update needed; data is already synchronized.");
+      res.send(
+        `No update needed; data in destination worksheet ${body.destinationWorksheetName} from spreadsheet ${body.destinationSpreadsheetName} is already synchronized.`
+      );
       return;
     }
 
-    logger.info(logTag, "Data mismatch detected; proceeding with update.");
+    logger.info(
+      logTag,
+      `Data mismatch detected in destination worksheet ${body.destinationWorksheetName} from spreadsheet ${body.destinationSpreadsheetName}; proceeding with update.`
+    );
 
     const rowCount = dataFromOrigin.length;
     const colCount = dataFromOrigin[0]?.length ?? 0;
 
     logger.info(
       logTag,
-      `Building batch updates for ${rowCount} rows and ${colCount} columns.`
+      `Building batch updates for ${rowCount} rows and ${colCount} columns in destination worksheet ${body.destinationWorksheetName} from spreadsheet ${body.destinationSpreadsheetName}.`
     );
 
     const batchUpdates: SheetV4.Schema$Request[] = await buildBatchUpdates(
@@ -118,7 +123,7 @@ exports.gsSyncFunction = https.onRequest(async (req, res) => {
     // Apply initial batch updates to clear and resize
     logger.info(
       logTag,
-      "Applying initial batch updates to clear and eventually resize the destination sheet."
+      `Applying initial batch updates to clear and eventually resize the destination sheet ${body.destinationWorksheetName} from spreadsheet ${body.destinationSpreadsheetName}.`
     );
 
     // When data differs and the destination sheet has no data to begin with
@@ -126,13 +131,13 @@ exports.gsSyncFunction = https.onRequest(async (req, res) => {
     if (dataFromDestination.length === 0) {
       logger.info(
         logTag,
-        "Destination sheet is empty; applying batch updates for eventual resize."
+        `Destination sheet ${body.destinationWorksheetName} from spreadsheet ${body.destinationSpreadsheetName} is empty; applying batch updates for eventual resize.`
       );
       await applyBatchUpdates(batchUpdates, body);
       // eslint-disable-next-line max-len
       logger.info(
         logTag,
-        `Updating data at range: ${destinationReadRange} with ${dataFromOrigin.length} rows in destination spreadsheet ${body.destinationSpreadsheetName}.`
+        `Updating data at range: ${destinationReadRange} with ${dataFromOrigin.length} rows in destination worksheet ${body.destinationWorksheetName} from spreadsheet ${body.destinationSpreadsheetName}.`
       );
       await updateDataInSheet(
         destinationReadRange,
@@ -144,7 +149,7 @@ exports.gsSyncFunction = https.onRequest(async (req, res) => {
       // and only update those rows
       logger.info(
         logTag,
-        "Destination sheet has existing data; determining row-wise updates."
+        `Destination sheet ${body.destinationWorksheetName} from spreadsheet ${body.destinationSpreadsheetName} has existing data; determining row-wise updates.`
       );
 
       const dataFromOriginLen = dataFromOrigin.length;
@@ -167,13 +172,16 @@ exports.gsSyncFunction = https.onRequest(async (req, res) => {
         }
       }
 
-      logger.info(logTag, `Rows identified for update: ${rowsToUpdate.length}`);
+      logger.info(
+        logTag,
+        `Rows identified for update in destination worksheet ${body.destinationWorksheetName} from spreadsheet ${body.destinationSpreadsheetName}: ${rowsToUpdate.length}`
+      );
 
       // If there are rows to update, ensure the sheet is resized appropriately first
       if (rowsToUpdate.length) {
         logger.info(
           logTag,
-          "applying batch updates for eventual resize before updating rows."
+          `Applying batch updates for eventual resize before updating rows in destination worksheet ${body.destinationWorksheetName} from spreadsheet ${body.destinationSpreadsheetName}.`
         );
         await applyBatchUpdates(batchUpdates, body);
       }
@@ -186,7 +194,11 @@ exports.gsSyncFunction = https.onRequest(async (req, res) => {
 
         logger.info(
           logTag,
-          `Updating row ${rowIndex + 1} at range: ${updateRange}`
+          `Updating row ${
+            rowIndex + 1
+          } at range: ${updateRange} in destination worksheet ${
+            body.destinationWorksheetName
+          } from spreadsheet ${body.destinationSpreadsheetName}.`
         );
 
         await updateDataInSheet(
