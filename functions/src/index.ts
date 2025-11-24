@@ -97,7 +97,7 @@ exports.gsSyncFunction = https.onRequest(async (req, res) => {
         `Data in destination worksheet ${body.destinationWorksheetName} from spreadsheet ${body.destinationSpreadsheetName} is up-to-date. No update needed.`
       );
       res.send(
-        `No update needed; data in destination worksheet is already synchronized.`
+        "No update needed; data in destination worksheet is already synchronized."
       );
       return;
     }
