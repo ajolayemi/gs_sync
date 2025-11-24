@@ -97,7 +97,7 @@ exports.gsSyncFunction = https.onRequest(async (req, res) => {
         `Data in destination worksheet ${body.destinationWorksheetName} from spreadsheet ${body.destinationSpreadsheetName} is up-to-date. No update needed.`
       );
       res.send(
-        `No update needed; data in destination worksheet ${body.destinationWorksheetName} from spreadsheet ${body.destinationSpreadsheetName} is already synchronized.`
+        `No update needed; data in destination worksheet is already synchronized.`
       );
       return;
     }
@@ -184,6 +184,39 @@ exports.gsSyncFunction = https.onRequest(async (req, res) => {
           `Applying batch updates for eventual resize before updating rows in destination worksheet ${body.destinationWorksheetName} from spreadsheet ${body.destinationSpreadsheetName}.`
         );
         await applyBatchUpdates(batchUpdates, body);
+      }
+
+      // To avoid reaching write per user limits, when there are many rows to update,
+      // opt for clearing the sheet and rewriting all data
+      // current project write per limit per user is 300 writes per minute per user
+      if (rowsToUpdate.length > 20) {
+        logger.info(
+          logTag,
+          `Number of rows to update (${rowsToUpdate.length}) exceeds threshold; performing full data rewrite in destination worksheet ${body.destinationWorksheetName} from spreadsheet ${body.destinationSpreadsheetName}.`
+        );
+        // Add clear request to batch updates
+        const clearRequest: SheetV4.Schema$Request = {
+          updateCells: {
+            range: {
+              sheetId: body.destinationWorksheetId,
+            },
+            fields: "userEnteredValue",
+          },
+        };
+        batchUpdates.unshift(clearRequest);
+        await applyBatchUpdates(batchUpdates, body);
+        // eslint-disable-next-line max-len
+        logger.info(
+          logTag,
+          `Updating data at range: ${destinationReadRange} with ${dataFromOrigin.length} rows in destination worksheet ${body.destinationWorksheetName} from spreadsheet ${body.destinationSpreadsheetName}.`
+        );
+        await updateDataInSheet(
+          destinationReadRange,
+          dataFromOrigin,
+          body.destinationSpreadsheetId
+        );
+        res.send("Completed");
+        return;
       }
       // Update only the rows that have changed
       for (const rowIndex of rowsToUpdate) {
